@@ -1,3 +1,6 @@
+// From https://github.com/jujojujo2003/OpenCVHandGuesture
+// Updated to support latest opencv version
+
 #include<opencv2/opencv.hpp>
 #include<iostream>
 #include<vector>
@@ -263,13 +266,13 @@ int main(int argc, char *argv[])
 
 						}
 						
-						no_of_fingers=min(5,no_of_fingers);
-						cout<<"NO OF FINGERS: "<<no_of_fingers<<endl;
-						mouseTo(palm_center.x,palm_center.y);//Move the cursor corresponding to the palm
-						if(no_of_fingers<4)//If no of fingers is <4 , click , else release
-							mouseClick();
-						else
-							mouseRelease();
+						// no_of_fingers=min(5,no_of_fingers);
+						// cout<<"NO OF FINGERS: "<<no_of_fingers<<endl;
+						// mouseTo(palm_center.x,palm_center.y);//Move the cursor corresponding to the palm
+						// if(no_of_fingers<4)//If no of fingers is <4 , click , else release
+						// 	mouseClick();
+						// else
+						// 	mouseRelease();
 						
 					}
 				}
