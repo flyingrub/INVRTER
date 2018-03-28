@@ -1,3 +1,7 @@
+# INVRTER : School project
+The goal of this project is to be able to use the camera on an htc vive 
+to control the Virtual Reality thanks to our hand.
+
 ## Unity :
 In order to correctly bind opencvsharp to your local install of opencv 
 run the following commands :
