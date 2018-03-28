@@ -23,7 +23,7 @@ pair<Point,double> circleFromPoints(Point p1, Point p2, Point p3)
 	double offset = pow(p2.x,2) +pow(p2.y,2);
 	double bc =   ( pow(p1.x,2) + pow(p1.y,2) - offset )/2.0;
 	double cd =   (offset - pow(p3.x, 2) - pow(p3.y, 2))/2.0;
-	double det =  (p1.x - p2.x) * (p2.y - p3.y) - (p2.x - p3.x)* (p1.y - p2.y); 
+	double det =  (p1.x - p2.x) * (p2.y - p3.y) - (p2.x - p3.x)* (p1.y - p2.y);
 	double TOL = 0.0000001;
 	if (abs(det) < TOL) { cout<<"POINTS TOO CLOSE"<<endl;return make_pair(Point(0,0),0); }
 
@@ -62,7 +62,7 @@ void mouseClick()
 	}
 
 	if(XSendEvent(display, PointerWindow, True, 0xfff, &event) == 0) cout<<"ERROR SENDING CLICK"<<endl;
-	
+
 	XFlush(display);
 
 	XCloseDisplay(display);
@@ -124,26 +124,28 @@ int main(int argc, char *argv[])
 	Mat fore;
 	vector<pair<Point,double> > palm_centers;
 	VideoCapture cap(0);
-	Ptr<BackgroundSubtractorMOG2> bg = createBackgroundSubtractorMOG2();
-	bg->setNMixtures(3);
+	Ptr<BackgroundSubtractor> bg = createBackgroundSubtractorMOG2();
 
 	namedWindow("Frame");
 	namedWindow("Background");
+	namedWindow("Foreground");
+	int learning_rate = 50;
+	createTrackbar("learning rate", "Foreground", &learning_rate, 100);
+
 	int backgroundFrame=500;
 
 
-	for(;;)
+	while(1)
 	{
 		vector<vector<Point> > contours;
 		//Get the frame
 		cap >> frame;
 
 		//Update the current background model and get the foreground
-		if(backgroundFrame>0)
-		{bg->apply(frame,fore);backgroundFrame--;}
-		else
-		{bg->apply(frame,fore,0);}
-
+		if(backgroundFrame>0) {bg->apply(frame,fore);backgroundFrame--;}
+		else {bg->apply(frame,fore);}
+		double l = learning_rate / 100.0;
+		 bg->apply(frame,fore, l * 0.1);
 		//Get background image to display it
 		bg->getBackgroundImage(back);
 
@@ -157,7 +159,7 @@ int main(int argc, char *argv[])
 		findContours(fore,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_NONE);
 		for(int i=0;i<contours.size();i++)
 			//Ignore all small insignificant areas
-			if(contourArea(contours[i])>=5000)		    
+			if(contourArea(contours[i])>=5000)
 			{
 				//Draw contour
 				vector<vector<Point> > tcontours;
@@ -225,7 +227,7 @@ int main(int argc, char *argv[])
 						palm_centers.push_back(soln_circle);
 						if(palm_centers.size()>10)
 							palm_centers.erase(palm_centers.begin());
-						
+
 						Point palm_center;
 						double radius=0;
 						for(int i=0;i<palm_centers.size();i++)
@@ -265,7 +267,7 @@ int main(int argc, char *argv[])
 
 
 						}
-						
+
 						// no_of_fingers=min(5,no_of_fingers);
 						// cout<<"NO OF FINGERS: "<<no_of_fingers<<endl;
 						// mouseTo(palm_center.x,palm_center.y);//Move the cursor corresponding to the palm
@@ -273,15 +275,14 @@ int main(int argc, char *argv[])
 						// 	mouseClick();
 						// else
 						// 	mouseRelease();
-						
+
 					}
 				}
 
 			}
-		if(backgroundFrame>0)
-			putText(frame, "Recording Background", cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200,200,250), 1, CV_AA);
 		imshow("Frame",frame);
 		imshow("Background",back);
+		imshow("Foreground", fore);
 		if(waitKey(10) >= 0) break;
 	}
 	return 0;
