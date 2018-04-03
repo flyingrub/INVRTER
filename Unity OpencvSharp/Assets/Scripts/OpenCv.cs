@@ -4,9 +4,17 @@ using System.Collections;
 
 public class OpenCv : MonoBehaviour
 {
+	public static HersheyFonts font = HersheyFonts.HersheyDuplex;
+	public static Scalar blue = new Scalar(255,0,0);
+	public static int waitTimeMs = 30;
+	public static int spaceKey = 32;
+
+
 	VideoCapture capture;
+	HandColorProfile handColor;
 
 	void Start() {
+		handColor = new HandColorProfile();
 		capture = new VideoCapture(0);
 		if (capture.IsOpened() == false) {
 			print("Cannot open video camera");
@@ -17,41 +25,47 @@ public class OpenCv : MonoBehaviour
 	}
 
 	IEnumerator cv() {
-		using (Window windowCap = new Window("capture"))
-		using (Window windowRange = new Window("range"))
-		using (Mat image = new Mat()) // Frame image buffer
+		Mat image = new Mat();
+		while (true)
 		{
-			// When the movie playback reaches end, Mat.data becomes NULL.
-			while (true)
-			{
-				capture.Read(image); // same as cvQueryFrame
-				if (image.Empty())
-					break;
+			capture.Read(image);
+			if (image.Empty())
+				break;
 
-				windowCap.ShowImage(image);
-				windowRange.ShowImage(handMask(image));
-				yield return null;
-			}
+			checkKeyPress();
+			Mat flip = image.Flip(FlipMode.Y);
+			showCamera(flip);
+			yield return null;
 		}
 		yield return null;
 	}
 
-    Scalar shinColorUpper(int hue) {
-        return new Scalar(hue, (int) 0.8 * 255, (int) 0.6*255);
-    }
+	void checkKeyPress() {
+		int pressedKey = Window.WaitKey(waitTimeMs);
+		if (pressedKey > 0) print("pressed: " + pressedKey);
+		if (pressedKey == spaceKey) {
+			handColor.setHasColor();
+		};
+	}
 
-    Scalar skinColorLower(int hue) {
-        return new Scalar(hue, (int) 0.1 * 255, (int) 0.05 * 255);
-    }
+	void showCamera(Mat image) {
+		if (!handColor.getHasColor()) {
+			handColor.drawRegionMarker(image);
+		} else {
+			showMask(image);
+		}
+		using (Window windowCap = new Window("capture"))
+		windowCap.ShowImage(image);
+	}
 
-    Mat handMask(Mat image) {
-        Mat imgHLS = image.CvtColor(ColorConversionCodes.BGR2HLS);
-        Mat rangeMask = imgHLS.InRange(skinColorLower(0), shinColorUpper(15));
+	void showMask(Mat image) {
+		Mat mask = handColor.getMask(image);
+		using (Window windowRange = new Window("range"))
+		windowRange.ShowImage(mask);
+	}
 
-        Mat blurred = rangeMask.Blur(new Size(10,10));
-        Mat thresholded = blurred.Threshold(200, 255, ThresholdTypes.Binary);
-		return rangeMask;
-    }
-
+	void OnApplicationQuit() {
+		Window.DestroyAllWindows();
+	}
 
 }
