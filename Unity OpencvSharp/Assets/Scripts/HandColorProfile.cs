@@ -14,8 +14,8 @@ public class HandColorProfile : MonoBehaviour {
 		regions = new ArrayList();
 	}
 
-	public void setHasColor() {
-		hasColorProfile = true;
+	public void setHasColor(bool has) {
+		hasColorProfile = has;
 	}
 
 	public bool getHasColor() {
@@ -40,9 +40,9 @@ public class HandColorProfile : MonoBehaviour {
 		}
 
 		image.PutText("Press space when your hand is ready",
-						new Point(20,10), OpenCv.font, 0.5, OpenCv.blue);
+						new Point(20,10), OpenCv.FONT, 0.5, Scalar.Blue);
 		foreach (RegionOfInterest r in regions) {
-			r.draw(image, OpenCv.blue);
+			r.draw(image, Scalar.Blue);
 		}
 	}
 
@@ -72,7 +72,7 @@ public class HandColorProfile : MonoBehaviour {
 			res += rangeMask;
 		}
 
-		res.Erode(new Mat());
+		//res.Erode(new Mat());
 		res = res.MedianBlur(7);
 		return res;
 	}

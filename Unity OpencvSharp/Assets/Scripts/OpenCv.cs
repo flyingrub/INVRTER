@@ -4,18 +4,21 @@ using System.Collections;
 
 public class OpenCv : MonoBehaviour
 {
-	public static HersheyFonts font = HersheyFonts.HersheyDuplex;
-	public static Scalar blue = new Scalar(255,0,0);
-	public static int waitTimeMs = 30;
-	public static int spaceKey = 32;
+	public static readonly HersheyFonts FONT = HersheyFonts.HersheyDuplex;
+	public static readonly int WAIT_TIME_MS = 10;
+	public static readonly int SPACE_KEY = 32;
+	public static readonly int P_KEY = 112;
 
 
-	VideoCapture capture;
+	UnityEngine.XR.WSA.WebCam.VideoCapture capture;
 	HandColorProfile handColor;
+	Window windowCap = new Window("capture");
+	Window windowRange = new Window("range");
+	int count = 0;
 
 	void Start() {
 		handColor = new HandColorProfile();
-		capture = new VideoCapture(0);
+		capture = new UnityEngine.XR.WSA.WebCam.VideoCapture(0);
 		if (capture.IsOpened() == false) {
 			print("Cannot open video camera");
 		} else {
@@ -41,26 +44,32 @@ public class OpenCv : MonoBehaviour
 	}
 
 	void checkKeyPress() {
-		int pressedKey = Window.WaitKey(waitTimeMs);
+		int pressedKey = Window.WaitKey(WAIT_TIME_MS);
 		if (pressedKey > 0) print("pressed: " + pressedKey);
-		if (pressedKey == spaceKey) {
-			handColor.setHasColor();
-		};
+		if (pressedKey == SPACE_KEY) {
+			count =0;
+			handColor.setHasColor(true);
+		} else if (pressedKey == P_KEY) {
+			Window.DestroyAllWindows();
+			handColor.setHasColor(false);
+		}
 	}
 
 	void showCamera(Mat image) {
+		count++;
 		if (!handColor.getHasColor()) {
 			handColor.drawRegionMarker(image);
 		} else {
 			showMask(image);
 		}
-		using (Window windowCap = new Window("capture"))
+		image.PutText("count:" + count,
+						new Point(50,10), OpenCv.FONT, 0.5, Scalar.Blue);
+
 		windowCap.ShowImage(image);
 	}
 
 	void showMask(Mat image) {
 		Mat mask = handColor.getMask(image);
-		using (Window windowRange = new Window("range"))
 		windowRange.ShowImage(mask);
 	}
 
