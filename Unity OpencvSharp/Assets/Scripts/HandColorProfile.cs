@@ -47,15 +47,15 @@ public class HandColorProfile : MonoBehaviour {
 	}
 
 	Scalar skinColorLower(Scalar color) {
-		double hue = Math.Max(color.Val0 - 10, 0);
-		double light = Math.Max(color.Val1 - 30, 0);
+		double hue = Math.Max(color.Val0 - 15, 0);
+		double light = Math.Max(color.Val1 - 35, 0);
 		double sat = Math.Max(color.Val2 - 80, 0);
 		return new Scalar(hue, light, sat);
 	}
 
 	Scalar shinColorUpper(Scalar color) {
-		double hue = Math.Min(color.Val0 + 10, 255);
-		double light = Math.Min(color.Val1 + 30, 255);
+		double hue = Math.Min(color.Val0 + 15, 255);
+		double light = Math.Min(color.Val1 + 35, 255);
 		double sat = Math.Min(color.Val2 + 80, 255);
 		return new Scalar(hue, light, sat);
 	}
@@ -72,7 +72,7 @@ public class HandColorProfile : MonoBehaviour {
 			res += rangeMask;
 		}
 
-		//res.Erode(new Mat());
+		res.Erode(new Mat());
 		res = res.MedianBlur(7);
 		return res;
 	}

@@ -5,20 +5,18 @@ using System.Collections;
 public class OpenCv : MonoBehaviour
 {
 	public static readonly HersheyFonts FONT = HersheyFonts.HersheyDuplex;
-	public static readonly int WAIT_TIME_MS = 10;
-	public static readonly int SPACE_KEY = 32;
-	public static readonly int P_KEY = 112;
 
-
-	UnityEngine.XR.WSA.WebCam.VideoCapture capture;
+	VideoCapture capture;
 	HandColorProfile handColor;
-	Window windowCap = new Window("capture");
-	Window windowRange = new Window("range");
+	Window windowCap;
+	Window windowRange;
 	int count = 0;
 
 	void Start() {
 		handColor = new HandColorProfile();
-		capture = new UnityEngine.XR.WSA.WebCam.VideoCapture(0);
+		capture = new VideoCapture(0);
+		windowCap = new Window("capture");
+		windowRange = new Window("range");
 		if (capture.IsOpened() == false) {
 			print("Cannot open video camera");
 		} else {
@@ -44,13 +42,10 @@ public class OpenCv : MonoBehaviour
 	}
 
 	void checkKeyPress() {
-		int pressedKey = Window.WaitKey(WAIT_TIME_MS);
-		if (pressedKey > 0) print("pressed: " + pressedKey);
-		if (pressedKey == SPACE_KEY) {
-			count =0;
+		if (Input.GetKeyDown(KeyCode.Space)) {
+			count = 0;
 			handColor.setHasColor(true);
-		} else if (pressedKey == P_KEY) {
-			Window.DestroyAllWindows();
+		} else if (Input.GetKeyDown(KeyCode.P)) {
 			handColor.setHasColor(false);
 		}
 	}
@@ -74,6 +69,8 @@ public class OpenCv : MonoBehaviour
 	}
 
 	void OnApplicationQuit() {
+		windowCap.Dispose();
+		windowRange.Dispose();
 		Window.DestroyAllWindows();
 	}
 
