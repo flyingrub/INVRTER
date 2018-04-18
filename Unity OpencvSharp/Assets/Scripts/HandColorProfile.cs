@@ -8,6 +8,7 @@ public class HandColorProfile : MonoBehaviour {
 	ArrayList regions;
 	bool hasColorProfile;
 	int width = -1, height = -1;
+	Mat mask;
 
 	public HandColorProfile() {
 		hasColorProfile = false;
@@ -33,6 +34,9 @@ public class HandColorProfile : MonoBehaviour {
 	}
 
 	public void drawRegionMarker(Mat image) {
+		if (hasColorProfile) {
+			return;
+		}
 		if (height == -1) {
 			width = image.Cols;
 			height = image.Rows;
@@ -61,7 +65,6 @@ public class HandColorProfile : MonoBehaviour {
 	}
 
 	public Mat getMask(Mat image) {
-		image = image.PyrDown();
 		image = image.MedianBlur(3);
 		image = image.CvtColor(ColorConversionCodes.BGR2HLS);
 		Mat res = new Mat(image.Size(), MatType.CV_8U);
@@ -76,6 +79,5 @@ public class HandColorProfile : MonoBehaviour {
 		res = res.MedianBlur(7);
 		return res;
 	}
-
 
 }

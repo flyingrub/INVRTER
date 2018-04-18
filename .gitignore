@@ -4,6 +4,8 @@
 [Bb]uild/
 [Bb]uilds/
 Assets/AssetStoreTools*
+/Unity OpencvSharp/Assets/Standard Assets/
+/Unity OpencvSharp/Assets/SampleScenes/
 
 # Visual Studio cache directory
 /.vs/
