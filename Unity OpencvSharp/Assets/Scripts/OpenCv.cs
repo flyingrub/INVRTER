@@ -33,12 +33,12 @@ public class OpenCv : MonoBehaviour
 		float moveHorizontal = Input.GetAxis ("Horizontal");
 		float moveVertical = Input.GetAxis ("Vertical");
 
-		float m = handGesture.getHandArea() / 220000;
-		Vector3 movementHand = new Vector3 (0, m, 0);
-		transform.position += movementHand;
+		float m = handGesture.getHandArea() / 110000;
+		Vector3 movementHand = new Vector3 (10, m, 15);
+		transform.position = movementHand;
 
-		Vector3 movement = new Vector3 (moveHorizontal, 0.0f, moveVertical);
-		ball.AddForce(movement * 1);
+		// Vector3 movement = new Vector3 (moveHorizontal, 0.0f, moveVertical);
+		// ball.AddForce(movement * 1);
 	}
 
 	IEnumerator cv() {
