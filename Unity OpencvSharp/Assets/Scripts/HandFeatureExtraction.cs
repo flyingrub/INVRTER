@@ -38,6 +38,8 @@ public class HandFeatureExtraction : MonoBehaviour {
 		image = drawPoints(image, getFingerPoints(), Scalar.Blue);
 		image = drawPoints(image, getDefectPoints(), Scalar.Red);
 		image = drawContour(image, getHullPoints(), Scalar.Red);
+		image.PutText("Finger Number :" + getFingerNumber(),
+						new Point(20,10), OpenCv.FONT, 0.5, Scalar.White);
 		return image;
 	}
 
@@ -73,6 +75,11 @@ public class HandFeatureExtraction : MonoBehaviour {
 
 	public Point[] getDefectPoints() {
 		return hullDefectVertices.Select((d) => d.d1).ToArray();
+	}
+
+
+	public int getFingerNumber() {
+		return hullDefectVertices.Count();
 	}
 
 	public float getHandArea() {
@@ -171,6 +178,7 @@ public class HandFeatureExtraction : MonoBehaviour {
 			return angle < 60;
 		});
 	}
+
 }
 
 public class HullDefectVertice {
