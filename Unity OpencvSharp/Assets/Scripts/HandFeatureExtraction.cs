@@ -1,15 +1,18 @@
+using UnityEngine;
 using OpenCvSharp;
-using System.Collections;
-using System.Collections.Generic;
 
 using System;
 using System.Linq;
+using System.Collections;
+using System.Collections.Generic;
 
-public class HandFeatureExtraction {
+
+
+public class HandFeatureExtraction : MonoBehaviour {
 
 	Point[] contour;
 	IndexedPoint[] hull;
-	Point[] defects;
+	IEnumerable<HullDefectVertice> hullDefectVertices;
 	Mat mask;
 
 	public Mat getMask() {
@@ -27,7 +30,57 @@ public class HandFeatureExtraction {
 		mask = handColor.getMask(image);
 		contour = getContours(mask);
 		hull = getConvexHull(contour);
-		defects = getDefects();
+		hullDefectVertices = filterVertices(getDefects());
+	}
+
+	public Mat getFeature(Mat image) {
+		image = drawContour(image, contour, Scalar.Blue);
+		image = drawPoints(image, getFingerPoints(), Scalar.Blue);
+		image = drawPoints(image, getDefectPoints(), Scalar.Red);
+		image = drawContour(image, getHullPoints(), Scalar.Red);
+		return image;
+	}
+
+	public Mat drawContour(Mat image, Point[] contour, Scalar color) {
+		Point[][] contours = new Point[1][];
+		contours[0] = contour;
+		Cv2.DrawContours(image, contours, 0,
+			color: color,
+			thickness: 4,
+			lineType: LineTypes.Link8,
+			maxLevel: int.MaxValue);
+		return image;
+	}
+
+	public Mat drawPoints(Mat image, Point[] points, Scalar color) {
+		foreach (Point p in points) {
+			image.Circle(p, 10, color, thickness: 4);
+		}
+		return image;
+	}
+
+	public int[] getHullIndices() {
+		return hull.Select((iPoint) => iPoint.indice).ToArray();
+	}
+
+	public Point[] getHullPoints() {
+		return hull.Select((iPoint) => iPoint.p).ToArray();
+	}
+
+	public Point[] getFingerPoints() {
+		return hullDefectVertices.Select((d) => d.pt).ToArray();
+	}
+
+	public Point[] getDefectPoints() {
+		return hullDefectVertices.Select((d) => d.d1).ToArray();
+	}
+
+	public float getHandArea() {
+		if (contour == null) {
+			return 0;
+		}
+		var boundingRect = Cv2.BoundingRect(contour);
+		return boundingRect.Width * boundingRect.Height;
 	}
 
 	public Point[] getContours(Mat image) {
@@ -66,39 +119,6 @@ public class HandFeatureExtraction {
 		return contours[biggestContourIndex];
 	}
 
-	public Mat drawContour(Mat image, Point[] contour, Scalar color) {
-		Point[][] contours = new Point[1][];
-		contours[0] = contour;
-		Cv2.DrawContours(image, contours, 0,
-			color: color,
-			thickness: 4,
-			lineType: LineTypes.Link8,
-			maxLevel: int.MaxValue);
-		return image;
-	}
-
-	public int[] getHullIndices() {
-		return hull.Select((iPoint) => iPoint.indice).ToArray();
-	}
-
-	public Point[] getHullPoints() {
-		return hull.Select((iPoint) => iPoint.p).ToArray();
-	}
-
-	public Mat getFeature(Mat image) {
-		image = drawContour(image, contour, Scalar.Blue);
-		image = drawPoints(image, getHullPoints());
-		image = drawContour(image, getHullPoints(), Scalar.Red);
-		return image;
-	}
-
-	public Mat drawPoints(Mat image, Point[] points) {
-		foreach (Point p in points) {
-			image.Circle(p, 10, Scalar.Red);
-		}
-		return image;
-	}
-
 	public IndexedPoint[] getConvexHull(Point[] contour) {
 		var hullIndices = Cv2.ConvexHullIndices(contour, false);
 		return removeTooClose(hullIndices).ToArray();
@@ -117,19 +137,45 @@ public class HandFeatureExtraction {
 		return res;
 	}
 
-	public Point[] getDefects() {
+	public IEnumerable<HullDefectVertice> getDefects() {
 		int[] hullIndices = getHullIndices();
 		var defects = Cv2.ConvexityDefects(contour, hullIndices);
-		return null;
+		var hullPointDefectNeighbors = hullIndices.ToDictionary(indices => indices, i => new List<int>());
+		foreach(var defect in defects) {
+			int startPoint = defect.Item0;
+			int endPoint = defect.Item1;
+			int defectPoint = defect.Item2;
+			hullPointDefectNeighbors[startPoint].Add(defectPoint);
+			hullPointDefectNeighbors[endPoint].Add(defectPoint);
+		}
+
+		return hullIndices
+			.Where((indice) => hullPointDefectNeighbors[indice].Count() > 1)
+			.Select((indice) => {
+				var defectNeighbor = hullPointDefectNeighbors[indice];
+				return new HullDefectVertice {
+					pt = contour[indice],
+					d1 = contour[defectNeighbor[0]],
+					d2 = contour[defectNeighbor[1]]
+				};
+			}
+		);
 	}
 
-	public float getHandArea() {
-		if (contour == null) {
-			return 0;
-		}
-		var boundingRect = Cv2.BoundingRect(contour);
-		return boundingRect.Width * boundingRect.Height;
+	public IEnumerable<HullDefectVertice> filterVertices(IEnumerable<HullDefectVertice> hullVertices) {
+		return hullVertices.Where((v) => {
+			double a = v.d1.DistanceTo(v.d2);
+			double b = v.pt.DistanceTo(v.d1);
+			double c = v.pt.DistanceTo(v.d2);
+			double angle = Math.Acos(((Math.Pow(b, 2) + Math.Pow(c, 2)) - Math.Pow(a, 2)) / (2 * b * c)) * (180 / Math.PI);
+			Debug.Log(angle + "|" + a + "|" + b + "|" + c);
+			return angle < 60;
+		});
 	}
+}
+
+public class HullDefectVertice {
+	public Point pt, d1, d2;
 }
 
 public class IndexedPoint {

@@ -4,7 +4,7 @@ using System;
 using UnityEngine;
 
 
-public class HandColorProfile : MonoBehaviour {
+public class HandColorProfile {
 	ArrayList regions;
 	bool hasColorProfile;
 	int width = -1, height = -1;
