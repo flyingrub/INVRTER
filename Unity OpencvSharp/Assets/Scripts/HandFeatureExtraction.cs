@@ -168,7 +168,6 @@ public class HandFeatureExtraction : MonoBehaviour {
 			double b = v.pt.DistanceTo(v.d1);
 			double c = v.pt.DistanceTo(v.d2);
 			double angle = Math.Acos(((Math.Pow(b, 2) + Math.Pow(c, 2)) - Math.Pow(a, 2)) / (2 * b * c)) * (180 / Math.PI);
-			Debug.Log(angle + "|" + a + "|" + b + "|" + c);
 			return angle < 60;
 		});
 	}
