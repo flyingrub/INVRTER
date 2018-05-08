@@ -5,6 +5,9 @@ using UnityEngine;
 
 
 public class HandColorProfile {
+	public static int HUE_RANGE = 15;
+	public static int LIGHT_RANGE = 35;
+	public static int SATURATION_RANGE = 80;
 	ArrayList regions;
 	bool hasColorProfile;
 	int width = -1, height = -1;
@@ -51,16 +54,16 @@ public class HandColorProfile {
 	}
 
 	Scalar skinColorLower(Scalar color) {
-		double hue = Math.Max(color.Val0 - 15, 0);
-		double light = Math.Max(color.Val1 - 35, 0);
-		double sat = Math.Max(color.Val2 - 80, 0);
+		double hue = Math.Max(color.Val0 - HUE_RANGE, 0);
+		double light = Math.Max(color.Val1 - LIGHT_RANGE, 0);
+		double sat = Math.Max(color.Val2 - SATURATION_RANGE, 0);
 		return new Scalar(hue, light, sat);
 	}
 
 	Scalar shinColorUpper(Scalar color) {
-		double hue = Math.Min(color.Val0 + 15, 255);
-		double light = Math.Min(color.Val1 + 35, 255);
-		double sat = Math.Min(color.Val2 + 80, 255);
+		double hue = Math.Min(color.Val0 + HUE_RANGE, 255);
+		double light = Math.Min(color.Val1 + LIGHT_RANGE, 255);
+		double sat = Math.Min(color.Val2 + SATURATION_RANGE, 255);
 		return new Scalar(hue, light, sat);
 	}
 

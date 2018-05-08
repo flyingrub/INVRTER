@@ -14,6 +14,7 @@ public class HandFeatureExtraction : MonoBehaviour {
 	IndexedPoint[] hull;
 	IEnumerable<HullDefectVertice> hullDefectVertices;
 	Mat mask;
+	List<int> fingerNumbers = new List<int>();
 
 	public Mat getMask() {
 		return mask;
@@ -38,9 +39,10 @@ public class HandFeatureExtraction : MonoBehaviour {
 		image = drawPoints(image, getFingerPoints(), Scalar.Blue);
 		image = drawPoints(image, getDefectPoints(), Scalar.Red);
 		image = drawContour(image, getHullPoints(), Scalar.Red);
+		countFinger();
 		image.PutText("Finger Number :" + getFingerNumber(),
 						new Point(20,10), OpenCv.FONT, 0.5, Scalar.White);
-		return image;
+		return mask;
 	}
 
 	public Mat drawContour(Mat image, Point[] contour, Scalar color) {
@@ -77,9 +79,25 @@ public class HandFeatureExtraction : MonoBehaviour {
 		return hullDefectVertices.Select((d) => d.d1).ToArray();
 	}
 
+	public void countFinger() {
+		// fingerNumbers.ForEach((v) => { print(v); });
+		if (fingerNumbers.Count > 20) {
+			fingerNumbers.Remove(19);
+		}
+		fingerNumbers.Add(getCurrentFingerNumber());
+	}
+
+	private int getCurrentFingerNumber() {
+		return hullDefectVertices.Count();
+	}
 
 	public int getFingerNumber() {
-		return hullDefectVertices.Count();
+		if (fingerNumbers.Count<15) {
+			return 1;
+		}
+		return fingerNumbers.GroupBy(x => x)
+						  .OrderByDescending(x => x.Count())
+						  .First().Key;
 	}
 
 	public float getHandArea() {
@@ -175,7 +193,7 @@ public class HandFeatureExtraction : MonoBehaviour {
 			double b = v.pt.DistanceTo(v.d1);
 			double c = v.pt.DistanceTo(v.d2);
 			double angle = Math.Acos(((Math.Pow(b, 2) + Math.Pow(c, 2)) - Math.Pow(a, 2)) / (2 * b * c)) * (180 / Math.PI);
-			return angle < 60;
+			return angle < 30;
 		});
 	}
 
