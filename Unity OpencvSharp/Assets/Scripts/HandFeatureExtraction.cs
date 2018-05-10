@@ -41,8 +41,10 @@ public class HandFeatureExtraction : MonoBehaviour {
 		image = drawContour(image, getHullPoints(), Scalar.Red);
 		countFinger();
 		image.PutText("Finger Number :" + getFingerNumber(),
-						new Point(20,10), OpenCv.FONT, 0.5, Scalar.White);
-		return mask;
+						new Point(20,20), OpenCv.FONT, 0.5, Scalar.White);
+		image.PutText("Hand Direction :" + getDirection(),
+						new Point(20,50), OpenCv.FONT, 0.5, Scalar.White);
+		return image;
 	}
 
 	public Mat drawContour(Mat image, Point[] contour, Scalar color) {
@@ -108,6 +110,27 @@ public class HandFeatureExtraction : MonoBehaviour {
 		return boundingRect.Width * boundingRect.Height;
 	}
 
+	public Direction getDirection() {
+		var boundingRect = Cv2.BoundingRect(contour);
+		if (boundingRect.Height > boundingRect.Width) {
+			return Direction.UP;
+		} else if (hullDefectVertices.Count() > 3) {
+			Point a = hullDefectVertices.ElementAt(3).pt;
+			Point b = hullDefectVertices.ElementAt(3).d1;
+			if (isLeft(a, b)) {
+				return Direction.LEFT;
+			} else {
+				return Direction.RIGHT;
+			}
+		} else {
+			return Direction.UP;
+		}
+	}
+
+	public bool isLeft(Point a, Point b) {
+		return (a.X * b.Y - a.Y * b.X) < 0;
+	}
+
 	public Point[] getContours(Mat image) {
 		HierarchyIndex[] hierarchyIndexes;
 		Point[][] contours;
@@ -149,7 +172,7 @@ public class HandFeatureExtraction : MonoBehaviour {
 		return removeTooClose(hullIndices).ToArray();
 	}
 
-	public List<IndexedPoint> removeTooClose(int[] hullIndices) {
+	public IEnumerable<IndexedPoint> removeTooClose(int[] hullIndices) {
 		List<IndexedPoint> res = new List<IndexedPoint>();
 		var indexedPoints = hullIndices.Select((indice) => new IndexedPoint{ indice = indice, p = contour[indice] });
 		var clusters = indexedPoints.GroupBy(i => i.p, new ClosenessComparer(40));
@@ -193,10 +216,15 @@ public class HandFeatureExtraction : MonoBehaviour {
 			double b = v.pt.DistanceTo(v.d1);
 			double c = v.pt.DistanceTo(v.d2);
 			double angle = Math.Acos(((Math.Pow(b, 2) + Math.Pow(c, 2)) - Math.Pow(a, 2)) / (2 * b * c)) * (180 / Math.PI);
-			return angle < 30;
+			return angle < 60;
 		});
 	}
 
+}
+
+public enum Direction
+{
+	LEFT, RIGHT, UP
 }
 
 public class HullDefectVertice {
