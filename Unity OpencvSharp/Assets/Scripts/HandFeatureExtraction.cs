@@ -40,7 +40,7 @@ public class HandFeatureExtraction : MonoBehaviour {
 		image = drawPoints(image, getDefectPoints(), Scalar.Red);
 		image = drawContour(image, getHullPoints(), Scalar.Red);
 		countFinger();
-		image.PutText("Finger Number :" + getFingerNumber(),
+		image.PutText("Finger Number :" + getCurrentFingerNumber(),
 						new Point(20,20), OpenCv.FONT, 0.5, Scalar.White);
 		image.PutText("Hand Direction :" + getDirection(),
 						new Point(20,50), OpenCv.FONT, 0.5, Scalar.White);
@@ -89,7 +89,10 @@ public class HandFeatureExtraction : MonoBehaviour {
 		fingerNumbers.Add(getCurrentFingerNumber());
 	}
 
-	private int getCurrentFingerNumber() {
+	public int getCurrentFingerNumber() {
+		if (contour == null) {
+			return 0;
+		}
 		return hullDefectVertices.Count();
 	}
 
@@ -104,19 +107,20 @@ public class HandFeatureExtraction : MonoBehaviour {
 
 	public float getHandArea() {
 		if (contour == null) {
-			return 0;
+			return 1;
 		}
 		var boundingRect = Cv2.BoundingRect(contour);
 		return boundingRect.Width * boundingRect.Height;
 	}
 
 	public Direction getDirection() {
+		if (contour == null) {return Direction.UP;}
 		var boundingRect = Cv2.BoundingRect(contour);
 		if (boundingRect.Height > boundingRect.Width) {
 			return Direction.UP;
 		} else if (hullDefectVertices.Count() > 3) {
-			Point a = hullDefectVertices.ElementAt(3).pt;
-			Point b = hullDefectVertices.ElementAt(3).d1;
+			Point a = hullDefectVertices.ElementAt(hullDefectVertices.Count() /2).pt;
+			Point b = hullDefectVertices.ElementAt(hullDefectVertices.Count() /2).d1;
 			if (isLeft(a, b)) {
 				return Direction.LEFT;
 			} else {

@@ -33,9 +33,9 @@ public class OpenCv : MonoBehaviour
 		handGesture = new HandFeatureExtraction();
 		capture = new VideoCapture(0);
 		windowCap = new Window("capture");
-		// windowCap.CreateTrackbar("Hue range", HandColorProfile.HUE_RANGE, 50, this.hueRangeChange);
-		// windowCap.CreateTrackbar("Light range", HandColorProfile.LIGHT_RANGE, 60, this.lightRangeChange);
-		// windowCap.CreateTrackbar("Saturation range", HandColorProfile.SATURATION_RANGE, 160, this.satRangeChange);
+		windowCap.CreateTrackbar("Hue range", HandColorProfile.HUE_RANGE, 50, this.hueRangeChange);
+		windowCap.CreateTrackbar("Light range", HandColorProfile.LIGHT_RANGE, 60, this.lightRangeChange);
+		windowCap.CreateTrackbar("Saturation range", HandColorProfile.SATURATION_RANGE, 160, this.satRangeChange);
 		if (capture.IsOpened() == false) {
 			print("Cannot open video camera");
 		} else {
@@ -49,13 +49,23 @@ public class OpenCv : MonoBehaviour
 		float moveHorizontal = Input.GetAxis ("Horizontal");
 		float moveVertical = Input.GetAxis ("Vertical");
 
-		float m = handGesture.getHandArea() / 110000;
-		Vector3 movementHand = new Vector3 (10, m, 15);
+		float m = handGesture.getHandArea() / 110000f + 1f;
+		print(m);
+		Vector3 movementHand = new Vector3 (transform.position.x, m, transform.position.z);
 		transform.position = movementHand;
-		gameObject.GetComponent<Renderer>().material.color = Color.HSVToRGB(handGesture.getFingerNumber()  * 0.2f, 1, 1);
+		gameObject.GetComponent<Renderer>().material.color = Color.HSVToRGB(handGesture.getCurrentFingerNumber()  * 0.2f, 1, 1);
 
-		// Vector3 movement = new Vector3 (moveHorizontal, 0.0f, moveVertical);
-		// ball.AddForce(movement * 4);
+		Direction d = handGesture.getDirection();
+		if (d == Direction.UP) {
+			ball.velocity = Vector3.zero;
+			ball.angularVelocity = Vector3.zero;
+		} else if (d == Direction.LEFT) {
+			Vector3 movement = new Vector3 (0.0f, 0.0f, -4.0f);
+			ball.AddForce(movement);
+		} else if (d == Direction.RIGHT) {
+			Vector3 movement = new Vector3 (0.0f, 0.0f, 4.0f);
+			ball.AddForce(movement);
+		}
 	}
 
 	IEnumerator cv() {
